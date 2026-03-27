@@ -1,0 +1,148 @@
+{% extends 'base.html.twig' %}
+
+{% block title %}Title Basics{% endblock %}
+
+{% block body %}
+    <main style="max-width: 1100px; margin: 3rem auto; padding: 0 1rem; font-family: sans-serif;">
+        <header style="margin-bottom: 1.5rem;">
+            <h1 style="margin-bottom: 0.5rem;">IMDb Title Basics</h1>
+            <p style="margin: 0; color: #555;">
+                Page <strong>{{ currentPage }}</strong> of <strong>{{ totalPages }}</strong>.
+                Showing <strong>{{ titleBasics|length }}</strong> records out of <strong>{{ totalItems }}</strong>.
+            </p>
+        </header>
+
+        <section style="margin-bottom: 1.5rem;">
+            <a href="/" style="display: inline-block; margin-right: 1rem; color: #0a58ca; text-decoration: none;">Home</a>
+            <a href="/ratings" style="display: inline-block; color: #0a58ca; text-decoration: none;">Ratings page</a>
+        </section>
+
+        <section style="margin-bottom: 1.5rem;">
+            <form method="get" action="{{ path('title_basics_search.php') }}" style="margin: 0;">
+                <input
+                    type="search"
+                    name="search"
+                    placeholder="Search by title"
+                    value="{{ search is defined ? search : '' }}"
+                    style="padding: 0.55rem 0.9rem; border: 1px solid #ccc; width: 100%; max-width: 320px;"
+                >
+            </form>
+        </section>
+
+        <section style="display: flex; flex-wrap: wrap; gap: 0.5rem; align-items: center; margin-bottom: 1.5rem;">
+            <span style="margin-right: 0.5rem; color: #555;">POST pagination:</span>
+
+            <form method="post" action="{{ path('title_basics_all.php') }}" style="margin: 0;">
+                <input type="hidden" name="page" value="1">
+                <input type="hidden" name="currentPage" value="{{ currentPage }}">
+                <input type="hidden" name="firstCursor" value="{{ firstCursor ?? '' }}">
+                <input type="hidden" name="lastCursor" value="{{ lastCursor ?? '' }}">
+                <button
+                    type="submit"
+                    {% if currentPage <= 1 %}disabled{% endif %}
+                    style="padding: 0.55rem 0.9rem; border: 1px solid #ccc; background: #f5f5f5; cursor: pointer;"
+                >
+                    First
+                </button>
+            </form>
+
+            <form method="post" action="{{ path('title_basics_all.php') }}" style="margin: 0;">
+                <input type="hidden" name="page" value="{{ currentPage > 1 ? currentPage - 1 : 1 }}">
+                <input type="hidden" name="currentPage" value="{{ currentPage }}">
+                <input type="hidden" name="firstCursor" value="{{ firstCursor ?? '' }}">
+                <input type="hidden" name="lastCursor" value="{{ lastCursor ?? '' }}">
+                <button
+                    type="submit"
+                    {% if currentPage <= 1 or firstCursor is empty %}disabled{% endif %}
+                    style="padding: 0.55rem 0.9rem; border: 1px solid #ccc; background: #f5f5f5; cursor: pointer;"
+                >
+                    Previous
+                </button>
+            </form>
+
+            {% for pageNumber in pageStart..pageEnd %}
+                <form method="post" action="{{ path('title_basics_all.php') }}" style="margin: 0;">
+                    <input type="hidden" name="page" value="{{ pageNumber }}">
+                    <input type="hidden" name="currentPage" value="{{ currentPage }}">
+                    <input type="hidden" name="firstCursor" value="{{ firstCursor ?? '' }}">
+                    <input type="hidden" name="lastCursor" value="{{ lastCursor ?? '' }}">
+                    <button
+                        type="submit"
+                        {% if pageNumber == currentPage %}disabled{% endif %}
+                        style="padding: 0.55rem 0.9rem; border: 1px solid {% if pageNumber == currentPage %}#111{% else %}#ccc{% endif %}; background: {% if pageNumber == currentPage %}#111{% else %}#fff{% endif %}; color: {% if pageNumber == currentPage %}#fff{% else %}#111{% endif %}; cursor: pointer;"
+                    >
+                        {{ pageNumber }}
+                    </button>
+                </form>
+            {% endfor %}
+
+            <form method="post" action="{{ path('title_basics_all.php') }}" style="margin: 0;">
+                <input type="hidden" name="page" value="{{ currentPage < totalPages ? currentPage + 1 : totalPages }}">
+                <input type="hidden" name="currentPage" value="{{ currentPage }}">
+                <input type="hidden" name="firstCursor" value="{{ firstCursor ?? '' }}">
+                <input type="hidden" name="lastCursor" value="{{ lastCursor ?? '' }}">
+                <button
+                    type="submit"
+                    {% if currentPage >= totalPages or lastCursor is empty %}disabled{% endif %}
+                    style="padding: 0.55rem 0.9rem; border: 1px solid #ccc; background: #f5f5f5; cursor: pointer;"
+                >
+                    Next
+                </button>
+            </form>
+
+            <form method="post" action="{{ path('title_basics_all.php') }}" style="margin: 0;">
+                <input type="hidden" name="page" value="{{ totalPages }}">
+                <input type="hidden" name="currentPage" value="{{ currentPage }}">
+                <input type="hidden" name="firstCursor" value="{{ firstCursor ?? '' }}">
+                <input type="hidden" name="lastCursor" value="{{ lastCursor ?? '' }}">
+                <button
+                    type="submit"
+                    {% if currentPage >= totalPages %}disabled{% endif %}
+                    style="padding: 0.55rem 0.9rem; border: 1px solid #ccc; background: #f5f5f5; cursor: pointer;"
+                >
+                    Last
+                </button>
+            </form>
+        </section>
+
+        <table style="width: 100%; border-collapse: collapse; background: #fff;">
+            <thead>
+                <tr>
+                    <th style="text-align: left; border-bottom: 1px solid #ccc; padding: 0.75rem; width: 90px;">#</th>
+                    <th style="text-align: left; border-bottom: 1px solid #ccc; padding: 0.75rem;">Title</th>
+                    <th style="text-align: left; border-bottom: 1px solid #ccc; padding: 0.75rem;">Type</th>
+                    <th style="text-align: left; border-bottom: 1px solid #ccc; padding: 0.75rem;">Original Name</th>
+                    <th style="text-align: left; border-bottom: 1px solid #ccc; padding: 0.75rem;">Start Year</th>
+                    <th style="text-align: left; border-bottom: 1px solid #ccc; padding: 0.75rem;">End Year</th>
+                    <th style="text-align: left; border-bottom: 1px solid #ccc; padding: 0.75rem;">Duration</th>
+                    <th style="text-align: left; border-bottom: 1px solid #ccc; padding: 0.75rem;">Genare</th>
+                    <th style="text-align: left; border-bottom: 1px solid #ccc; padding: 0.75rem;">Rating</th>
+                    <th style="text-align: left; border-bottom: 1px solid #ccc; padding: 0.75rem;">Votes</th>
+
+                </tr>
+            </thead>
+            <tbody>
+                {% for titleBasic in titleBasics %}
+                    <tr>
+                    
+                        <td style="border-bottom: 1px solid #eee; padding: 0.75rem;">{{ (currentPage - 1) * limit + loop.index }}</td>
+                        <td style="border-bottom: 1px solid #eee; padding: 0.75rem; font-family: monospace;"><a href = "/card/{{ titleBasic.tconst }}">{{ titleBasic.primaryTitle }}</a></td>
+                        <td style="border-bottom: 1px solid #eee; padding: 0.75rem; font-family: monospace;">{{ titleBasic.titleType }}</td>
+                        <td style="border-bottom: 1px solid #eee; padding: 0.75rem; font-family: monospace;"><a href = "/card/{{ titleBasic.tconst }}">{{ titleBasic.originalTitle }}</a></td>
+                        <td style="border-bottom: 1px solid #eee; padding: 0.75rem; font-family: monospace;">{{ titleBasic.startYear }}</td>
+                        <td style="border-bottom: 1px solid #eee; padding: 0.75rem; font-family: monospace;">{{ titleBasic.endYear }}</td>
+                        <td style="border-bottom: 1px solid #eee; padding: 0.75rem; font-family: monospace;">{{ titleBasic.runtimeMinutes }}</td>
+                        <td style="border-bottom: 1px solid #eee; padding: 0.75rem; font-family: monospace;">{{ titleBasic.genres }}</td>
+                        <td style="border-bottom: 1px solid #eee; padding: 0.75rem; font-family: monospace;">{{ titleBasic.rating ? titleBasic.rating.averageRating : '—' }}</td>
+                        <td style="border-bottom: 1px solid #eee; padding: 0.75rem; font-family: monospace;">{{ titleBasic.rating ? titleBasic.rating.numVotes : '—' }}</td>
+                        
+                    </tr>
+                {% else %}
+                    <tr>
+                        <td colspan="10" style="padding: 1rem;">No title basics records found.</td>
+                    </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </main>
+{% endblock %}
