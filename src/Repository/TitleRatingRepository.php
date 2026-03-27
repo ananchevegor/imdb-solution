@@ -21,7 +21,6 @@ class TitleRatingRepository extends ServiceEntityRepository
     {
         return $this->createQueryBuilder('itr')
             ->select('itr.tconst, itr.averageRating, itr.numVotes')
-            ->setMaxResults(100)
             ->getQuery()
             ->getArrayResult();
     }
